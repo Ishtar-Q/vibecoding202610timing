@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>可愛糖果風碼錶計時器</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Henny Penny for fairy-tale cartoon look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Henny+Penny&display=swap" rel="stylesheet">
+  <style>
+    /* 引入作者介紹專用字體：BpmfHuninn 注音圓體 */
+    @font-face {
+      font-family: 'BpmfHuninn';
+      src: url('https://oxxostudio-demo.github.io/vibe-coding-20261030/BpmfHuninn-Regular.subset.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    .font-author {
+      font-family: 'BpmfHuninn', cursive, sans-serif;
+    }
+
+    body {
+      font-family: 'Henny Penny', cursive, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* 3D 萌系立體糖果按鈕特效 */
+    .btn-3d {
+      transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+    .btn-3d:not(:disabled):hover {
+      transform: translateY(-3px) scale(1.02);
+    }
+    .btn-3d:not(:disabled):active {
+      transform: translateY(4px) scale(0.97);
+    }
+    .btn-3d:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      filter: grayscale(45%);
+      box-shadow: 0 4px 0 #9ca3af !important;
+      transform: none !important;
+    }
+
+    /* 浮動可愛裝飾動畫 */
+    @keyframes floatSoft {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(2deg); }
+    }
+    @keyframes floatCloud {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-9px) scale(1.03); }
+    }
+    @keyframes pulseDial {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.015); }
+    }
+    @keyframes gentleSway {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(4deg) scale(1.04); }
+    }
+    @keyframes gentleSwayRev {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(-5deg) scale(1.03); }
+    }
+
+    .animate-float {
+      animation: floatSoft 4s ease-in-out infinite;
+    }
+    .animate-cloud {
+      animation: floatCloud 5s ease-in-out infinite;
+    }
+    .running-pulse {
+      animation: pulseDial 1.2s ease-in-out infinite;
+    }
+    .flower-sway {
+      transform-origin: bottom center;
+      animation: gentleSway 3s ease-in-out infinite;
+    }
+    .flower-sway-rev {
+      transform-origin: bottom center;
+      animation: gentleSwayRev 3.5s ease-in-out infinite;
+    }
+    @keyframes gentleBob {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(1.5deg); }
+    }
+    .img-bob {
+      animation: gentleBob 3.6s ease-in-out infinite;
+    }
+
+    /* 滾動條美化 */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(254, 240, 138, 0.3);
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #fbcfe8;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden relative" style="background: linear-gradient(180deg, #FFF9E6 0%, #FFF5DC 48%, #D4F0FD 48.1%, #C3ECFE 100%);">
+
+  <!-- 引入全域 SVG Symbol 符號庫 (包含使用者提供的望遠鏡圖標) -->
+  <svg style="display: none;">
+    <symbol id="icon-telescope" viewBox="0 0 35 32">
+      <path d="M27.464 2.314c-0.053-0.132-0.159-0.235-0.292-0.284s-0.281-0.039-0.406 0.027l-11.906 6.282c-0.224 0.118-0.324 0.385-0.233 0.621l0.245 0.641-6.873 3.769c-0.225 0.123-0.32 0.395-0.222 0.63l0.228 0.549-7.299 3.488c-0.24 0.115-0.348 0.397-0.246 0.643l1.498 3.61c0.080 0.192 0.265 0.309 0.462 0.309 0.056 0 0.112-0.009 0.167-0.029l7.625-2.701 0.228 0.549c0.079 0.191 0.264 0.309 0.462 0.309 0.046 0 0.092-0.006 0.139-0.020l7.276-2.097 0.218 0.569c0.074 0.197 0.263 0.321 0.465 0.321 0.049 0 0.098-0.007 0.147-0.022l13-4c0.134-0.041 0.244-0.136 0.304-0.262s0.065-0.272 0.013-0.401l-5-12.501zM2.7 21.469l-1.134-2.734 6.823-3.261 1.439 3.47-7.128 2.525zM11.191 19.623l-0.238-0.574c0 0 0 0 0 0l-1.843-4.445c0 0 0 0 0 0l-0.238-0.573 6.336-3.475 2.374 6.134 0.375 0.981-6.766 1.952zM19.3 18.385l-0.203-0.531c-0.003-0.011-0.001-0.024-0.006-0.035l-0.618-1.597-2.754-7.206 11.023-5.815 4.592 11.48-12.034 3.704zM28.964 0.314c-0.103-0.257-0.395-0.381-0.65-0.279-0.256 0.103-0.381 0.394-0.279 0.65l6 15c0.079 0.196 0.267 0.315 0.465 0.315 0.062 0 0.125-0.011 0.186-0.036 0.256-0.103 0.381-0.394 0.279-0.65l-6.001-15zM18 21h-3c-1.14 0-2 0.86-2 2v1.315l-5.879 6.859c-0.18 0.209-0.156 0.525 0.054 0.705 0.094 0.081 0.21 0.121 0.325 0.121 0.141 0 0.281-0.059 0.379-0.175l5.851-6.825h2.27v6.5c0 0.276 0.224 0.5 0.5 0.5s0.5-0.224 0.5-0.5v-6.5h2.27l5.85 6.825c0.099 0.116 0.239 0.175 0.38 0.175 0.115 0 0.231-0.040 0.325-0.121 0.21-0.18 0.234-0.495 0.054-0.705l-5.879-6.859v-1.24c0-1.163-0.878-2.075-2-2.075zM19 24h-5v-1c0-0.589 0.411-1 1-1h3c0.57 0 1 0.462 1 1.075v0.925z"></path>
+    </symbol>
+  </svg>
+
+  <!-- 頂部與背景裝飾元素 (放大的浮動雲朵、星星、音符、泡泡) -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+    <!-- 左上可愛大雲朵 -->
+    <div class="absolute top-5 left-6 sm:left-12 animate-cloud" style="animation-delay: 0.2s;">
+      <div class="relative w-32 h-20 bg-white/95 rounded-full shadow-md flex items-center justify-center border-2 border-pink-200">
+        <div class="absolute -top-5 left-4 w-14 h-14 bg-white rounded-full"></div>
+        <div class="absolute -top-7 left-12 w-16 h-16 bg-white rounded-full"></div>
+        <!-- 雲朵笑臉與可愛腮紅 -->
+        <div class="relative z-10 flex items-center gap-1.5 mt-2">
+          <span class="w-2.5 h-1.5 bg-pink-300 rounded-full"></span>
+          <span class="text-sm font-bold text-gray-700 tracking-wider">◕‿◕</span>
+          <span class="w-2.5 h-1.5 bg-pink-300 rounded-full"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右上音符與星星 (放大) -->
+    <div class="absolute top-8 left-1/3 animate-float hidden sm:block" style="animation-delay: 1s;">
+      <svg class="w-10 h-10 text-purple-400 fill-current opacity-85 drop-shadow" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
+    <div class="absolute top-12 right-1/4 animate-float" style="animation-delay: 1.5s;">
+      <span class="text-4xl text-yellow-400 drop-shadow-md">⭐</span>
+    </div>
+
+    <!-- 中間泡泡 (放大) -->
+    <div class="absolute top-1/2 left-8 w-11 h-11 rounded-full bg-cyan-200/50 border-2 border-white/80 animate-float" style="animation-delay: 0.7s;"></div>
+    <div class="absolute top-1/3 right-10 w-9 h-9 rounded-full bg-pink-200/60 border-2 border-white/90 animate-float" style="animation-delay: 2.1s;"></div>
+  </div>
+
+  <!-- 主要內容區塊 (時鐘盤 + 紀錄板) -->
+  <main class="relative z-10 container mx-auto px-4 pt-4 sm:pt-6 flex-1 flex flex-col items-center">
+    
+    <!-- 頂部雙欄面板 -->
+    <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-6 items-center justify-center my-auto">
+      
+      <!-- 左側：彩虹糖果碼錶時鐘面 -->
+      <div class="md:col-span-7 flex flex-col items-center justify-center">
+        <div id="clockContainer" class="relative w-72 h-72 sm:w-84 sm:h-84 md:w-96 md:h-96 rounded-full p-3.5 transition-all duration-300"
+             style="background: conic-gradient(from 0deg, #FFAAA6, #FFD3B5, #FDFFAB, #C8FFD4, #B5EAEA, #E0BBE4, #FFAAA6);
+                    box-shadow: 0 16px 28px -6px rgba(251, 146, 60, 0.35), inset 0 3px 6px rgba(255, 255, 255, 0.9);">
+          
+          <!-- 彩虹邊框上的可愛糖果圓點灑粉裝飾 -->
+          <div class="absolute inset-0 rounded-full pointer-events-none">
+            <span class="absolute top-3 left-1/4 w-3.5 h-2 bg-pink-400 rounded-full rotate-45 shadow-sm"></span>
+            <span class="absolute top-8 right-16 w-2 h-4 bg-yellow-300 rounded-full -rotate-12 shadow-sm"></span>
+            <span class="absolute bottom-6 left-16 w-4 h-2 bg-purple-400 rounded-full 15 shadow-sm"></span>
+            <span class="absolute bottom-10 right-14 w-3 h-3 bg-teal-400 rounded-full shadow-sm"></span>
+            <span class="absolute top-1/2 left-2 w-2.5 h-3 bg-red-400 rounded-full shadow-sm"></span>
+            <span class="absolute top-1/2 right-2 w-3 h-2 bg-green-400 rounded-full rotate-45 shadow-sm"></span>
+          </div>
+
+          <!-- 時鐘頂端的小臉裝飾 -->
+          <div class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-yellow-200 border-2 border-amber-300 rounded-full px-3 py-0.5 text-xs font-bold text-amber-800 shadow-sm flex items-center gap-1">
+            <span>●</span><span class="text-[10px]">‿</span><span>●</span>
+          </div>
+
+          <!-- 碼錶內部白色儀表板 (純刻度、無任何刻度數字) -->
+          <div class="w-full h-full bg-white rounded-full border-[7px] border-amber-100 flex flex-col items-center justify-center relative shadow-inner overflow-hidden">
+            
+            <!-- 刻度環 (SVG 繪製精緻純刻度標線) -->
+            <svg class="absolute inset-0 w-full h-full p-2 pointer-events-none" viewBox="0 0 300 300">
+              <!-- 動態秒針指針 -->
+              <line id="secondHand" x1="150" y1="150" x2="150" y2="40" stroke="#f472b6" stroke-width="3" stroke-linecap="round" style="transform-origin: 150px 150px; transform: rotate(0deg); transition: transform 0.05s linear;"/>
+              <circle cx="150" cy="150" r="5" fill="#ec4899" />
+              
+              <!-- 環繞純刻度線 (無周圍刻度數字) -->
+              <g id="dialTicks" opacity="0.65"></g>
+            </svg>
+
+            <!-- 時間顯示區塊 (雙色對比，如原圖 亮橘 與 寶藍) -->
+            <div class="relative z-10 flex items-baseline justify-center tracking-tight select-all">
+              <span id="displayMinutesHours" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#F57C00] drop-shadow-sm">00:00</span>
+              <span class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0284C7] mx-0.5">:</span>
+              <span id="displaySeconds" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0284C7] drop-shadow-sm">00</span>
+              <span class="text-2xl sm:text-3xl md:text-4xl font-black text-[#0369A1] ml-1">.</span>
+              <span id="displayMilliseconds" class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0284C7]">00</span>
+            </div>
+            
+            <div class="mt-2 text-[11px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 uppercase tracking-widest">
+              STOPWATCH
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右側：木質滾輪糖果造型 記憶時間 (LAP) 看板 -->
+      <div class="md:col-span-5 flex justify-center w-full">
+        <div class="w-full max-w-xs sm:max-w-sm flex flex-col items-center">
+          
+          <!-- 頂部可愛糖果造型夾飾與耳朵 -->
+          <div class="flex items-center justify-center -mb-2 z-20 space-x-2">
+            <!-- 熊耳朵 -->
+            <div class="w-7 h-5 bg-amber-700/80 rounded-t-full border-2 border-amber-900 border-b-0 shadow-sm"></div>
+            <!-- 大糖果 -->
+            <div class="flex items-center bg-gradient-to-r from-pink-400 via-rose-300 to-indigo-400 px-3 py-1 rounded-full border-2 border-white shadow-md">
+              <span class="text-xs">🍬</span>
+              <span class="text-[11px] font-black text-white ml-1 tracking-wider">LAPS</span>
+            </div>
+            <!-- 熊耳朵 -->
+            <div class="w-7 h-5 bg-amber-700/80 rounded-t-full border-2 border-amber-900 border-b-0 shadow-sm"></div>
+          </div>
+
+          <!-- 看板主體 (暖色木質邊框與紙質內容) -->
+          <div class="w-full bg-[#E5A96A] border-4 border-[#B07236] rounded-3xl p-3 shadow-xl relative">
+            <div class="bg-[#FFFDF7] rounded-2xl p-3 border-2 border-dashed border-[#DEB887] min-h-[290px] max-h-[330px] flex flex-col shadow-inner">
+              
+              <!-- 頂部標題說明 -->
+              <div class="flex justify-between items-center pb-2 border-b-2 border-amber-100 text-xs text-amber-800 font-bold px-1">
+                <span>圈數 / 記錄</span>
+                <span>記憶時間</span>
+              </div>
+
+              <!-- 記憶時間列表 (捲動區域) -->
+              <div id="lapList" class="flex-1 overflow-y-auto custom-scroll space-y-2 pt-2 pr-1">
+                <!-- 預設空狀態提示 -->
+                <div id="emptyLapPlaceholder" class="h-44 flex flex-col items-center justify-center text-gray-400 text-xs italic">
+                  <span class="text-2xl mb-1 opacity-70">⏱️</span>
+                  <span>點擊 LAP 記憶時間</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 下方木頭小推車車輪裝飾 -->
+            <div class="flex justify-between px-6 -mb-5 mt-1 relative z-10">
+              <div class="w-9 h-9 rounded-full bg-[#B07236] border-4 border-[#78461A] flex items-center justify-center shadow-lg">
+                <div class="w-3.5 h-3.5 bg-[#FFF2D8] rounded-full"></div>
+              </div>
+              <div class="w-9 h-9 rounded-full bg-[#B07236] border-4 border-[#78461A] flex items-center justify-center shadow-lg">
+                <div class="w-3.5 h-3.5 bg-[#FFF2D8] rounded-full"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 底部控制按鈕區 (放大變可愛的花草裝飾 + 緊湊靠近中間的按鈕群 + 右側可愛圖片) -->
+  <footer class="relative z-20 w-full pb-6 pt-1 flex flex-col items-center">
+    
+    <!-- 放大且生動可愛的花草插畫裝飾 (SVG + 擬真生動色調) -->
+    <div class="w-full max-w-xl mx-auto flex justify-around items-end px-4 mb-2 select-none pointer-events-none">
+      
+      <!-- 粉紅鬱金香花花 (放大 + 微搖擺動畫) -->
+      <div class="flower-sway flex flex-col items-center filter drop-shadow">
+        <svg class="w-12 h-14" viewBox="0 0 48 56" fill="none">
+          <!-- 花瓣 -->
+          <path d="M12 28C10 16 16 6 24 6C32 6 38 16 36 28C34 37 14 37 12 28Z" fill="#FF708F"/>
+          <path d="M14 24C17 12 24 6 24 6C24 6 31 12 34 24C28 32 20 32 14 24Z" fill="#FFA3BA"/>
+          <!-- 花莖與綠葉 -->
+          <path d="M24 35V54" stroke="#48BB78" stroke-width="4" stroke-linecap="round"/>
+          <path d="M24 44C16 43 12 40 8 46C12 48 20 48 24 45" fill="#68D391"/>
+          <path d="M24 46C30 44 35 42 38 47C35 49 28 49 24 47" fill="#68D391"/>
+        </svg>
+      </div>
+
+      <!-- 可愛三葉草/小嫩芽 (放大) -->
+      <div class="flower-sway-rev flex flex-col items-center filter drop-shadow-sm pb-1">
+        <svg class="w-10 h-11" viewBox="0 0 40 44" fill="none">
+          <path d="M20 22V42" stroke="#38A169" stroke-width="3.5" stroke-linecap="round"/>
+          <ellipse cx="12" cy="18" rx="8" ry="6" fill="#68D391" transform="rotate(-30 12 18)"/>
+          <ellipse cx="28" cy="18" rx="8" ry="6" fill="#68D391" transform="rotate(30 28 18)"/>
+          <ellipse cx="20" cy="10" rx="6" ry="7" fill="#48BB78"/>
+        </svg>
+      </div>
+
+      <!-- 紫色小雛菊 (放大) -->
+      <div class="flower-sway flex flex-col items-center filter drop-shadow">
+        <svg class="w-12 h-14" viewBox="0 0 48 56" fill="none">
+          <!-- 紫色花瓣群 -->
+          <circle cx="24" cy="20" r="6" fill="#ECC94B"/>
+          <circle cx="24" cy="8" r="5" fill="#B794F4"/>
+          <circle cx="24" cy="32" r="5" fill="#B794F4"/>
+          <circle cx="12" cy="20" r="5" fill="#9F7AEA"/>
+          <circle cx="36" cy="20" r="5" fill="#9F7AEA"/>
+          <circle cx="15" cy="11" r="5" fill="#B794F4"/>
+          <circle cx="33" cy="11" r="5" fill="#B794F4"/>
+          <circle cx="15" cy="29" r="5" fill="#9F7AEA"/>
+          <circle cx="33" cy="29" r="5" fill="#9F7AEA"/>
+          <!-- 花莖 -->
+          <path d="M24 34V54" stroke="#48BB78" stroke-width="4" stroke-linecap="round"/>
+          <path d="M24 44C31 42 36 44 40 48C36 50 29 49 24 46" fill="#48BB78"/>
+        </svg>
+      </div>
+
+      <!-- 橙黃色向陽花 (放大) -->
+      <div class="flower-sway-rev flex flex-col items-center filter drop-shadow">
+        <svg class="w-12 h-13" viewBox="0 0 48 52" fill="none">
+          <path d="M24 30V50" stroke="#38A169" stroke-width="4" stroke-linecap="round"/>
+          <path d="M24 40C16 38 12 42 8 46C13 47 20 46 24 42" fill="#68D391"/>
+          <!-- 橙黃雙層花瓣 -->
+          <circle cx="24" cy="18" r="14" fill="#F6AD55"/>
+          <circle cx="24" cy="18" r="10" fill="#FBD38D"/>
+          <circle cx="24" cy="18" r="5" fill="#ED8936"/>
+        </svg>
+      </div>
+
+      <!-- 蓬鬆嫩葉 -->
+      <div class="flower-sway flex flex-col items-center filter drop-shadow-sm pb-1 hidden sm:flex">
+        <svg class="w-9 h-11" viewBox="0 0 36 44" fill="none">
+          <path d="M18 20V42" stroke="#2F855A" stroke-width="3" stroke-linecap="round"/>
+          <path d="M18 30C10 26 8 16 16 12C20 16 20 24 18 30Z" fill="#48BB78"/>
+          <path d="M18 34C26 30 28 20 22 16C18 20 18 28 18 34Z" fill="#38A169"/>
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- 按鈕與右側圖片的整合包覆容器 -->
+    <div class="w-full max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-6">
+      
+      <!-- 按鈕控制面板：合併開始與暫停為單一動態主按鈕，形成三按鈕緊湊佈局 -->
+      <div class="w-full max-w-sm flex flex-col items-center justify-center gap-3">
+        
+        <!-- 1. 動態主按鈕：START (望遠鏡圖標) ⇄ PAUSE (香蕉黃) ⇄ CONTINUE (小太陽橘綠) -->
+        <button id="btnMainToggle" class="btn-3d w-full flex items-center justify-center space-x-2 py-3 px-6 rounded-3xl font-extrabold text-lg sm:text-xl text-white tracking-wide border-2 transition-all duration-200">
+          <div class="w-7 h-7 flex items-center justify-center" id="mainBtnIcon">
+            <!-- 預設由 JS 渲染望遠鏡圖示 -->
+          </div>
+          <span id="mainBtnText" class="drop-shadow">START</span>
+          <span id="mainBtnSubIcon" class="text-base">🐾</span>
+        </button>
+
+        <!-- 2. 下排兩側按鈕：RESET (草莓粉紅) 與 LAP (藍色糖果) -->
+        <div class="w-full grid grid-cols-2 gap-3">
+          <!-- RESET 按鈕 (粉紅草莓風：預設 disabled) -->
+          <button id="btnReset" disabled class="btn-3d flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-2xl font-extrabold text-sm sm:text-base text-white shadow-[0_5px_0_#B8334E] bg-gradient-to-b from-[#FF7E98] to-[#F1496D] border-2 border-[#C72749]">
+            <span class="text-base sm:text-lg">🍓</span>
+            <span class="drop-shadow">RESET</span>
+            <span class="text-sm font-black">↺</span>
+          </button>
+
+          <!-- LAP 按鈕 (藍色糖果風格：記憶時間，預設 disabled) -->
+          <button id="btnLap" disabled class="btn-3d flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-2xl font-extrabold text-sm sm:text-base text-white shadow-[0_5px_0_#2B81B3] bg-gradient-to-b from-[#56CCF2] to-[#2F80ED] border-2 border-[#1E6B9E]">
+            <span class="text-base sm:text-lg">🍬</span>
+            <span class="drop-shadow">LAP</span>
+            <span class="text-xs">🏅</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 右側可愛插圖區塊：無留白全滿展示，皮卡丘放大更加生動顯眼 -->
+      <div class="flex-shrink-0 img-bob">
+        <a href="https://sites.google.com/view/jtjh20261030pipi/index" target="_blank" rel="noopener noreferrer" class="block group focus:outline-none">
+          <div class="relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 overflow-hidden rounded-3xl shadow-[0_12px_28px_rgba(255,105,180,0.35)] border-4 border-white ring-4 ring-pink-300/80 transition-all duration-300 group-hover:scale-105 group-hover:ring-pink-400">
+            <img 
+              src="https://i.postimg.cc/cJS7TcDG/Gemini-Generated-Image-k6xwo3k6xwo3k6xw.jpg" 
+              alt="Cute Pikachu Art" 
+              class="w-full h-full object-cover object-center transform scale-110 group-hover:scale-115 transition-transform duration-300 select-none pointer-events-none"
+              onerror="this.src='https://placehold.co/200x200/FFDFE5/A855F7?text=Pikachu'"
+            />
+            <!-- 裝飾小貼紙星芒 -->
+            <div class="absolute top-2 right-2 bg-yellow-300 text-yellow-800 rounded-full w-8 h-8 flex items-center justify-center text-sm shadow-md font-bold border-2 border-white z-10 pointer-events-none">
+              ✨
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- 作者介紹區塊 (碼表及按鈕外圍下方，套用 BpmfHuninn 注音粉圓字體與可愛棉花糖氣泡框) -->
+    <div class="mt-4 mb-2 flex items-center justify-center">
+      <div class="font-author inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm border-2 border-pink-300 rounded-full shadow-[0_6px_16px_rgba(244,114,182,0.25)] text-pink-700 text-base sm:text-lg font-bold tracking-wider hover:scale-105 transition-transform duration-200">
+        <span class="text-xl animate-pulse">💖</span>
+        <span>這是張小彥做的可愛碼錶，啾咪</span>
+        <span class="text-xl animate-bounce">✨</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 狀態機與計時邏輯腳本 -->
+  <script>
+    // --- 可愛音效生成器 (使用 Web Audio API，無需外掛資源) ---
+    class CuteSoundPlayer {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      }
+      playPop(freq = 600, type = 'sine') {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.1);
+        } catch (e) {
+          // 靜音回退
+        }
+      }
+      playLap() {
+        this.playPop(850, 'triangle');
+      }
+      playReset() {
+        this.playPop(420, 'sine');
+      }
+    }
+    const soundPlayer = new CuteSoundPlayer();
+
+    // --- 刻度動態繪製 ---
+    function renderDialTicks() {
+      const dialGroup = document.getElementById('dialTicks');
+      let ticksSvg = '';
+      for (let i = 0; i < 60; i++) {
+        const angle = i * 6; // 360 / 60
+        const isMajor = i % 5 === 0;
+        const length = isMajor ? 12 : 6;
+        const width = isMajor ? 2.5 : 1.2;
+        const color = isMajor ? '#78350F' : '#B45309';
+        ticksSvg += `<line x1="150" y1="20" x2="150" y2="${20 + length}" stroke="${color}" stroke-width="${width}" stroke-linecap="round" transform="rotate(${angle} 150 150)" />`;
+      }
+      dialGroup.innerHTML = ticksSvg;
+    }
+    renderDialTicks();
+
+    // --- 碼錶核心數據與狀態管理 ---
+    // 狀態定義: 'INDEX' (首頁初態), 'RUNNING' (計時中), 'PAUSED' (已暫停)
+    let currentState = 'INDEX';
+    let startTime = 0;
+    let accumulatedTime = 0;
+    let timerInterval = null;
+    let laps = [];
+
+    // DOM 元素引用
+    const displayMinutesHours = document.getElementById('displayMinutesHours');
+    const displaySeconds = document.getElementById('displaySeconds');
+    const displayMilliseconds = document.getElementById('displayMilliseconds');
+    const secondHand = document.getElementById('secondHand');
+    const clockContainer = document.getElementById('clockContainer');
+
+    const btnMainToggle = document.getElementById('btnMainToggle');
+    const mainBtnText = document.getElementById('mainBtnText');
+    const mainBtnIcon = document.getElementById('mainBtnIcon');
+    const mainBtnSubIcon = document.getElementById('mainBtnSubIcon');
+
+    const btnReset = document.getElementById('btnReset');
+    const btnLap = document.getElementById('btnLap');
+    const lapList = document.getElementById('lapList');
+    const emptyLapPlaceholder = document.getElementById('emptyLapPlaceholder');
+
+    // 可愛動物徽章列表 (輪播顯示在 LAP 上)
+    const LAP_BADGES = [
+      { icon: '🐻', label: '熊熊徽章', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+      { icon: '🐰', label: '兔兔勳章', color: 'bg-pink-100 text-pink-700 border-pink-300' },
+      { icon: '🐥', label: '小雞獎牌', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+      { icon: '🐱', label: '貓咪金牌', color: 'bg-purple-100 text-purple-700 border-purple-300' }
+    ];
+
+    // 時間格式化工具
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const centiseconds = Math.floor((ms % 1000) / 10);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      
+      return {
+        hoursStr: pad(hours),
+        minutesStr: pad(minutes),
+        secondsStr: pad(seconds),
+        centiStr: pad(centiseconds),
+        fullStr: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(centiseconds)}`
+      };
+    }
+
+    // 更新畫面時鐘文字與秒針
+    function updateDisplay(ms) {
+      const formatted = formatTime(ms);
+      
+      // 若超過一小時則顯示 HH:MM，否則顯示 MM:SS 格式更清晰
+      if (parseInt(formatted.hoursStr) > 0) {
+        displayMinutesHours.textContent = `${formatted.hoursStr}:${formatted.minutesStr}`;
+      } else {
+        displayMinutesHours.textContent = `00:${formatted.minutesStr}`;
+      }
+
+      displaySeconds.textContent = formatted.secondsStr;
+      displayMilliseconds.textContent = formatted.centiStr;
+
+      // 旋轉指針角度 (一圈 60 秒)
+      const currentSeconds = (ms % 60000) / 1000;
+      const angle = currentSeconds * 6; // 360 度 / 60 秒
+      secondHand.style.transform = `rotate(${angle}deg)`;
+    }
+
+    // --- 按鈕外觀與狀態機轉移 ---
+    function updateUIState() {
+      switch (currentState) {
+        case 'INDEX':
+          // 初始狀態：顯示綠色 START 按鈕，RESET 與 LAP 皆 disabled
+          setMainBtnStyle('START');
+          btnReset.disabled = true;
+          btnLap.disabled = true;
+          clockContainer.classList.remove('running-pulse');
+          break;
+
+        case 'RUNNING':
+          // 計時中：主按鈕動態切換為黃色 PAUSE 香蕉風格，RESET 與 LAP 均 enabled
+          setMainBtnStyle('PAUSE');
+          btnReset.disabled = false;
+          btnLap.disabled = false;
+          clockContainer.classList.add('running-pulse');
+          break;
+
+        case 'PAUSED':
+          // 暫停狀態：主按鈕動態切換為 CONTINUE 繼續，RESET 可用，LAP 暫停
+          setMainBtnStyle('CONTINUE');
+          btnReset.disabled = false;
+          btnLap.disabled = true;
+          clockContainer.classList.remove('running-pulse');
+          break;
+      }
+    }
+
+    // 設置單一合併主按鈕樣式 (START / PAUSE / CONTINUE)
+    function setMainBtnStyle(type) {
+      btnMainToggle.className = "btn-3d w-full flex items-center justify-center space-x-2 py-3 px-6 rounded-3xl font-extrabold text-lg sm:text-xl tracking-wide border-2 transition-all duration-200 ";
+      
+      if (type === 'START') {
+        btnMainToggle.classList.add(
+          'text-white',
+          'bg-gradient-to-b', 'from-[#A5E358]', 'to-[#7BCB2F]',
+          'border-[#549E1F]', 'shadow-[0_6px_0_#488523]'
+        );
+        mainBtnText.textContent = 'START';
+        // 使用者指定的望遠鏡 SVG Symbol 圖標
+        mainBtnIcon.innerHTML = `<svg class="w-6 h-6 fill-current text-white drop-shadow"><use href="#icon-telescope"></use></svg>`;
+        mainBtnSubIcon.textContent = '🐾';
+      } else if (type === 'PAUSE') {
+        btnMainToggle.classList.add(
+          '!text-[#7C4A03]',
+          'bg-gradient-to-b', 'from-[#FFE358]', 'to-[#F7C61E]',
+          'border-[#D99B08]', 'shadow-[0_6px_0_#C58F10]'
+        );
+        mainBtnText.textContent = 'PAUSE';
+        mainBtnIcon.innerHTML = `<span class="text-2xl">🍌</span>`;
+        mainBtnSubIcon.textContent = '💤';
+      } else if (type === 'CONTINUE') {
+        btnMainToggle.classList.add(
+          'text-white',
+          'bg-gradient-to-b', 'from-[#FFA726]', 'to-[#FB8C00]',
+          'border-[#E65100]', 'shadow-[0_6px_0_#C2410C]'
+        );
+        mainBtnText.textContent = 'CONTINUE';
+        mainBtnIcon.innerHTML = `<svg class="w-6 h-6 fill-white text-white drop-shadow" viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"/></svg>`;
+        mainBtnSubIcon.textContent = '☀️';
+      }
+    }
+
+    // --- 動作處理邏輯 ---
+
+    // 1. 開始計時
+    function handleStart() {
+      soundPlayer.playPop(550);
+      startTime = performance.now();
+      timerInterval = requestAnimationFrame(tick);
+      currentState = 'RUNNING';
+      updateUIState();
+    }
+
+    // 動畫幀循環計時
+    function tick() {
+      if (currentState !== 'RUNNING') return;
+      const now = performance.now();
+      const currentElapsed = accumulatedTime + (now - startTime);
+      updateDisplay(currentElapsed);
+      timerInterval = requestAnimationFrame(tick);
+    }
+
+    // 2. 暫停計時
+    function handlePause() {
+      if (currentState !== 'RUNNING') return;
+      soundPlayer.playPop(480);
+      cancelAnimationFrame(timerInterval);
+      accumulatedTime += performance.now() - startTime;
+      currentState = 'PAUSED';
+      updateDisplay(accumulatedTime);
+      updateUIState();
+    }
+
+    // 3. 繼續計時
+    function handleContinue() {
+      handleStart();
+    }
+
+    // 4. 重設計時器 (回到 Index 首頁狀態)
+    function handleReset() {
+      soundPlayer.playReset();
+      cancelAnimationFrame(timerInterval);
+      currentState = 'INDEX';
+      accumulatedTime = 0;
+      startTime = 0;
+      laps = [];
+      updateDisplay(0);
+      renderLaps();
+      updateUIState();
+    }
+
+    // 5. 記憶時間 (LAP)
+    function handleLap() {
+      if (currentState === 'INDEX') return;
+      soundPlayer.playLap();
+      
+      const currentElapsed = currentState === 'RUNNING' 
+        ? accumulatedTime + (performance.now() - startTime) 
+        : accumulatedTime;
+
+      const lapNumber = laps.length + 1;
+      const formatted = formatTime(currentElapsed);
+      const badge = LAP_BADGES[(lapNumber - 1) % LAP_BADGES.length];
+
+      laps.unshift({
+        id: lapNumber,
+        formattedTime: formatted.fullStr,
+        badge: badge
+      });
+
+      renderLaps();
+    }
+
+    // 渲染圈數記錄板
+    function renderLaps() {
+      if (laps.length === 0) {
+        lapList.innerHTML = '';
+        lapList.appendChild(emptyLapPlaceholder);
+        return;
+      }
+
+      lapList.innerHTML = '';
+      laps.forEach((lap, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-2 rounded-xl border bg-white/90 shadow-sm transform transition hover:scale-[1.01] border-amber-200/70';
+        
+        // 顏色區分前幾名
+        const lapColor = idx === 0 ? 'text-[#F57C00]' : (idx === 1 ? 'text-[#0284C7]' : 'text-gray-700');
+        
+        item.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full border flex items-center justify-center text-xs ${lap.badge.color}">
+              ${lap.badge.icon}
+            </span>
+            <span class="font-extrabold text-xs tracking-wider ${lapColor}">
+              LAP ${String(lap.id).padStart(2, '0')}
+            </span>
+          </div>
+          <div class="font-bold text-sm tracking-wide text-gray-800">
+            ${lap.formattedTime}
+          </div>
+        `;
+        lapList.appendChild(item);
+      });
+    }
+
+    // --- 事件綁定 ---
+
+    // 合併後的動態主按鈕 (點擊切換 START -> PAUSE -> CONTINUE -> PAUSE...)
+    btnMainToggle.addEventListener('click', () => {
+      if (currentState === 'INDEX') {
+        handleStart();
+      } else if (currentState === 'RUNNING') {
+        handlePause();
+      } else if (currentState === 'PAUSED') {
+        handleContinue();
+      }
+    });
+
+    // RESET 按鈕
+    btnReset.addEventListener('click', () => {
+      handleReset();
+    });
+
+    // LAP 按鈕
+    btnLap.addEventListener('click', () => {
+      handleLap();
+    });
+
+    // 鍵盤無障礙支援 (空白鍵開始/暫停、L鍵計圈、R鍵重設)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        btnMainToggle.click();
+      } else if (e.code === 'KeyL' && !btnLap.disabled) {
+        handleLap();
+      } else if (e.code === 'KeyR' && !btnReset.disabled) {
+        handleReset();
+      }
+    });
+
+    // 初始化狀態
+    updateUIState();
+  </script>
+</body>
+</html>
